@@ -58,5 +58,4 @@ jobs:
           name: akatsuki-bin-${{ matrix.platform }}
           path: |
             # 根据实际输出目录调整（示例路径）
-            Source\Akatsuki\bin\${{ matrix.platform }}\Release\*.exe
-            Source\Akatsuki\bin\${{ matrix.platform }}\Release\*.dll
+            Source\Akagi\output\**\*.exe
