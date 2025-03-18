@@ -36,8 +36,8 @@ jobs:
       - name: Build Akatsuki
         shell: pwsh
         run: |
-          # 假设解决方案文件路径为 Source/Akatsuki/Akatsuki.sln
-          $solutionPath = "Source\uname.sln"
+          # 假设解决方案文件路径为 Source/uacme.sln
+          $solutionPath = "Source\uacme.sln"
           
           # 根据平台动态选择配置名称（根据实际项目调整）
           $platform = "${{ matrix.platform }}"
