@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 30
     strategy:
           matrix:
+            configuration: [Release]
             platform: [x86, x64]
 
     steps:
@@ -41,7 +42,7 @@ jobs:
               exit 1
           }
           # 编译解决方案，构建 Release 版本
-          & $msbuildExe $solutionPath /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+          & $msbuildExe $solutionPath /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
