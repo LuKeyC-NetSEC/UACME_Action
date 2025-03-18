@@ -1,35 +1,62 @@
-name: Build UACME on Release or Manually
+name: Build Akatsuki
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用 GitHub 提供的 Windows 环境
+    runs-on: windows-latest
+    timeout-minutes: 30
     strategy:
       matrix:
-        architecture: [x86, x64]  # 32位和64位架构的矩阵
+        platform: [x86, x64]  # 同时构建 32 位和 64 位
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # 获取仓库代码
-
-      - name: Set up Visual Studio
-        uses: microsoft/setup-msbuild@v1  # 设置 Visual Studio 编译环境
+        uses: actions/checkout@v4
         with:
-          vs-version: 'latest'  # 使用最新版本的 Visual Studio
+          submodules: recursive  # 若项目包含子模块
 
-      - name: Build Akatsuki project for ${{ matrix.architecture }}
+      - name: Setup MSBuild
+        shell: pwsh
         run: |
-          echo "Building Akatsuki for architecture: ${{ matrix.architecture }}"
-          # 使用 MSBuild 来编译项目，设置平台架构
-          msbuild "Akatsuki\Akatsuki.vcxproj" /p:Configuration=Release /p:Platform=${{ matrix.architecture }} /p:PlatformToolset=v142
+          # 查找 Visual Studio 安装路径
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+                      -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $vsPath) { throw "Visual Studio not found" }
           
-      - name: Upload build artifacts
+          # 设置 MSBuild 路径到环境变量
+          $msbuildPath = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
+          echo "MSBUILD_PATH=$msbuildPath" >> $env:GITHUB_ENV
+          echo "Using MSBuild: $msbuildPath"
+
+      - name: Build Akatsuki
+        shell: pwsh
+        run: |
+          # 假设解决方案文件路径为 Source/Akatsuki/Akatsuki.sln
+          $solutionPath = "Source\Akatsuki\Akatsuki.sln"
+          
+          # 根据平台动态选择配置名称（根据实际项目调整）
+          $platform = "${{ matrix.platform }}"
+          if ($platform -eq "x86") { $targetPlatform = "Win32" }  # Visual Studio 默认用 Win32 表示 x86
+          else { $targetPlatform = "x64" }
+
+          # 执行编译
+          & $env:MSBUILD_PATH "$solutionPath" `
+            /p:Configuration=Release `
+            /p:Platform=$targetPlatform `
+            /p:PlatformToolset=v143 `
+            /p:WindowsTargetPlatformVersion=10.0 `
+            /verbosity:minimal
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Akatsuki-Build-${{ matrix.architecture }}
+          name: akatsuki-bin-${{ matrix.platform }}
           path: |
-            Akatsuki/bin/${{ matrix.architecture }}/Release/*
+            # 根据实际输出目录调整（示例路径）
+            Source\Akatsuki\bin\${{ matrix.platform }}\Release\*.exe
+            Source\Akatsuki\bin\${{ matrix.platform }}\Release\*.dll
