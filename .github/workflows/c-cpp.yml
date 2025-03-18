@@ -12,7 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        with:
+          name: UACME-build
+          path: Source\Akagi\output\
+          
       - name: List repository files (for debugging)
         run: cmd /c "dir /s /b"
 
@@ -29,8 +32,8 @@ jobs:
           # 拼接 MSBuild.exe 的完整路径
           $msbuildExe = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
           Write-Host "Found MSBuild at: $msbuildExe"
-
-          # 设置解决方案文件的相对路径，根据你的项目结构修改这里
+          
+          # 设置解决方案文件的相对路径，根据项目实际情况修改（示例中假设在 Source 文件夹下）
           $solutionPath = "Source\UACME.sln"
           if (-not (Test-Path $solutionPath)) {
               Write-Error "未在路径 $solutionPath 找到解决方案文件。请确认路径是否正确。"
@@ -38,9 +41,10 @@ jobs:
           }
           # 编译解决方案，构建 Release 版本
           & $msbuildExe $solutionPath /p:Configuration=Release
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v2
         with:
           name: UACME-build
+          # 修改为你项目中编译产物实际存放的路径
           path: Source\Akagi\output\
-
