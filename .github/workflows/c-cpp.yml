@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: List repository files (for debugging)
+        run: dir /s /b
+
       - name: Setup MSBuild path and Build Solution
         shell: pwsh
         run: |
@@ -23,9 +26,15 @@ jobs:
               Write-Error "未找到 Visual Studio 安装路径，请检查 VS 是否已安装。"
               exit 1
           }
-          # 拼接 MSBuild.exe 的完整路径（这里以 VS2022 为例，可能位于 MSBuild\Current\Bin 目录下）
+          # 拼接 MSBuild.exe 的完整路径
           $msbuildExe = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
           Write-Host "Found MSBuild at: $msbuildExe"
 
-          # 执行编译命令，构建 Release 版本
-          & $msbuildExe "UACME.sln" /p:Configuration=Release
+          # 设置解决方案文件的相对路径，根据你的项目结构修改这里
+          $solutionPath = "Source\UACME.sln"
+          if (-not (Test-Path $solutionPath)) {
+              Write-Error "未在路径 $solutionPath 找到解决方案文件。请确认路径是否正确。"
+              exit 1
+          }
+          # 编译解决方案，构建 Release 版本
+          & $msbuildExe $solutionPath /p:Configuration=Release
