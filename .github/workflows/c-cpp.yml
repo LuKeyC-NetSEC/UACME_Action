@@ -47,4 +47,4 @@ jobs:
         with:
           name: UACME-executable
           # 修改为你项目中编译产物实际存放的路径
-          path: Source\Akagi\output\*.exe
+          path: Source\Akagi\output\**\*.exe
