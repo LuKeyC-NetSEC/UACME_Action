@@ -3,14 +3,29 @@ name: Build UACME on Release or Manually
 on:
   release:
     types: [published]
-  workflow_dispatch:  # 添加手动触发支持
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build solution in Release mode
-        run: msbuild UACME.sln /p:Configuration=Release
+      - name: Setup MSBuild path and Build Solution
+        shell: pwsh
+        run: |
+          # 使用 vswhere 查找最新安装的 Visual Studio 路径
+          $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" `
+                      -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+          if (-not $vsPath) {
+              Write-Error "未找到 Visual Studio 安装路径，请检查 VS 是否已安装。"
+              exit 1
+          }
+          # 拼接 MSBuild.exe 的完整路径（这里以 VS2022 为例，可能位于 MSBuild\Current\Bin 目录下）
+          $msbuildExe = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
+          Write-Host "Found MSBuild at: $msbuildExe"
+
+          # 执行编译命令，构建 Release 版本
+          & $msbuildExe "UACME.sln" /p:Configuration=Release
