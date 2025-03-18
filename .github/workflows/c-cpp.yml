@@ -1,8 +1,9 @@
-name: Build UACME on Release
+name: Build UACME on Release or Manually
 
 on:
   release:
     types: [published]
+  workflow_dispatch:  # 添加手动触发支持
 
 jobs:
   build:
