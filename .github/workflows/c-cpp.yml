@@ -38,3 +38,9 @@ jobs:
           }
           # 编译解决方案，构建 Release 版本
           & $msbuildExe $solutionPath /p:Configuration=Release
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: UACME-build
+          path: Source\Akagi\output\
+
