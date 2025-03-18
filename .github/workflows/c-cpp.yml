@@ -11,15 +11,12 @@ jobs:
     strategy:
       matrix:
         platform: [x86, x64]
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: List repository files (for debugging)
-        run: cmd /c "dir /s /b"
-
-      - name: Setup MSBuild path and Build Solution
+      - name: Setup MSBuild path
         shell: pwsh
         run: |
           # 使用 vswhere 查找最新安装的 Visual Studio 路径
@@ -32,15 +29,22 @@ jobs:
           # 拼接 MSBuild.exe 的完整路径
           $msbuildExe = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
           Write-Host "Found MSBuild at: $msbuildExe"
-          
-          # 设置解决方案文件的相对路径，根据项目实际情况修改（示例中假设在 Source 文件夹下）
+          # 将 MSBuild.exe 路径保存为环境变量，供后续步骤使用
+          echo "::set-env name=MSBUILD_PATH::$msbuildExe"
+
+      - name: Build Solution for ${{ matrix.platform }}
+        shell: pwsh
+        run: |
+          # 设置解决方案文件的相对路径，根据项目实际情况修改
           $solutionPath = "Source\UACME.sln"
           if (-not (Test-Path $solutionPath)) {
               Write-Error "未在路径 $solutionPath 找到解决方案文件。请确认路径是否正确。"
               exit 1
           }
-          # 编译解决方案，构建 Release 版本
-          & $msbuildExe $solutionPath /p:Configuration=Release
+          # 获取 MSBuild.exe 路径
+          $msbuildExe = $env:MSBUILD_PATH
+          # 编译解决方案，构建 Release 版本，指定平台
+          & $msbuildExe $solutionPath /p:Configuration=Release /p:Platform=${{ matrix.platform }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
