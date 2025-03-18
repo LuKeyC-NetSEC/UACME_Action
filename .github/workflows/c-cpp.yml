@@ -1,0 +1,15 @@
+name: Build UACME on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build solution in Release mode
+        run: msbuild UACME.sln /p:Configuration=Release
