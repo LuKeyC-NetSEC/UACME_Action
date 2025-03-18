@@ -29,8 +29,9 @@ jobs:
           # 拼接 MSBuild.exe 的完整路径
           $msbuildExe = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
           Write-Host "Found MSBuild at: $msbuildExe"
-          # 将 MSBuild.exe 路径保存为环境变量，供后续步骤使用
-          echo "::set-env name=MSBUILD_PATH::$msbuildExe"
+          # 将 MSBuild.exe 路径保存为环境文件，供后续步骤使用
+          $envFilePath = [System.Environment]::GetEnvironmentVariable('GITHUB_ENV')
+          "$msbuildExe" | Out-File -FilePath $envFilePath -Encoding utf8 -Append
 
       - name: Build Solution for ${{ matrix.platform }}
         shell: pwsh
